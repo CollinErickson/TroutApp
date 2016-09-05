@@ -25,7 +25,7 @@ function showNotification(storedData) {
     });
   }
 
-  if (openTodos>0) {
+  /*if (openTodos>0) {
     // Now create the notification
     chrome.notifications.create('reminder', {
         type: 'basic',
@@ -33,7 +33,7 @@ function showNotification(storedData) {
         title: 'Don\'t forget!',
         message: 'You have '+openTodos+' things to do. Get cracking!'
       }, function(notificationId) {});
-  }
+  }*/
 }
 
 chrome.app.runtime.onLaunched.addListener(launch);
