@@ -162,7 +162,7 @@
 		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_05/master_scoreboard.xml');
 		xhr.onload = function() {
 			if (xhr.status === 200) {
-				console.log('User\'s name is ' + xhr.status);
+				//console.log('User\'s name is ' + xhr.status);
 			}
 			else {
 				console.log('Request failed.  Returned status of ' + xhr.status);
@@ -172,13 +172,11 @@
 		//var anyTrout = null;
 		xhr.onreadystatechange = function () {
 				console.log('state change' + xhr.DONE + xhr.status);
-				//sleep(250).then(() => {
-					if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) { // this waits until it is done, so no sleep
-						console.log(xhr.status, xhr.DONE);
-						data = xhr.responseXML;
-						checkForNames(data);
-					}
-				//})
+				if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) { // this waits until it is done, so no sleep
+					console.log(xhr.status, xhr.DONE);
+					data = xhr.responseXML;
+					checkForNames(data);
+				}
 		};
 		xhr.send();
 	}
@@ -188,36 +186,71 @@
 		console.log("names to check are");
 		console.log(namesStorage);
 		var checksBatting = [];
+		var checksBattingDetails = {};
 		var namesToCheck = namesStorage;
 		var anyTrout = false;
-		var hrs_list = data.getElementsByTagName("batter");
-		for (var ihr = 0; ihr < hrs_list.length; ihr++) {
-			var hrs = hrs_list[ihr];
-			console.log('batting now is ' + hrs.getAttribute('last'));
+		var batter_list = data.getElementsByTagName("batter");
+		for (var ibat = 0; ibat < batter_list.length; ibat++) {
+			var batter = batter_list[ibat];
+			console.log('batting now is ' + batter.getAttribute('last'));
 			//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
 			//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
-			var thisLast = hrs.getAttribute('last');
+			var thisLast = batter.getAttribute('last');
 			if (jQuery.inArray(thisLast, namesToCheck) >= 0) {
 				anyTrout = true;
 				checksBatting.push(thisLast);
+				//console.log("HERE ");console.log(batter);
+				thisDetails = {};
+				thisDetails['h'] = batter.getAttribute('h');
+				thisDetails['ab'] = batter.getAttribute('ab');
+				checksBattingDetails[thisLast] = thisDetails;
 			}
 		}
-		console.log("Trout is batting: ", anyTrout);
+		//console.log(checksBattingDetails);
+		//console.log("Trout is batting: ", anyTrout);
 		if (anyTrout && !checksBatting.compare(previousNames)) {
 			console.log("new names are " + checksBatting);
 			//chrome.notifications.create('batters', {
+			/*createOrUpdate('batters', {
+				type: 'basic',
+				iconUrl: 'icon_128.png',
+				title: "Batting",
+				message: checksBatting + ' is batting!'
+				}, function(notificationId) {}
+			 );*/
+			 makeNotification(checksBatting, checksBattingDetails);
+		} else {
+			console.log("Nothing new");
+		}
+		previousNames = checksBatting;
+		return anyTrout;
+	}
+	
+	// 4: Make notification
+	function makeNotification(checksBatting, checksBattingDetails) {
+		items = [];
+		for (var i = 0; i < checksBatting.length; i++) {
+			items.push({title: checksBatting[i], message: checksBattingDetails[checksBatting[i]]['h'] + "/" + checksBattingDetails[checksBatting[i]]['ab']  });
+		}
+		var opt = {
+		  type: "list",
+		  title: "Batting",
+		  message: "Primary message to display",
+		  iconUrl: "icon_128.png",
+		  items: items
+		}
+		if (true) {
+			createOrUpdate('batters', opt, function(notificationId) {}); 
+		} else {
 			createOrUpdate('batters', {
 				type: 'basic',
 				iconUrl: 'icon_128.png',
 				title: "Batting",
 				message: checksBatting + ' is batting!'
 				}, function(notificationId) {}
-			 );
-		} else {
-			console.log("Nothing new");
+			);
 		}
-		previousNames = checksBatting;
-		return anyTrout;
+		
 	}
 	
 	
