@@ -4,7 +4,11 @@
 			if (iterable[index]) return true;
 		}
     return false;
-}
+	}
+	
+	function sleep (time) {
+		return new Promise((resolve) => setTimeout(resolve, time));
+	}
 
 	function readxml() {
 		jQuery.get( "http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_03/master_scoreboard.xml", function( data ) {
@@ -23,6 +27,7 @@
 	}
   
 	function didTroutHitHR() {
+		// Doesn't work when called by eventListener, don't know why since it does work initially
 		console.log("Running Trout HR");
 		//var req = new XMLHttpRequest();
 		//req.setRequestHeader("Authorization", "");
@@ -50,15 +55,127 @@
 			//console.log( "Load was performed." );
 			return anyTrout;
 		});
+		console.log(anyTrout);
 		return "hit Trout hr" + anyTrout;
 	}	
+	
+	
+	function didTroutHitHR2() {
+		// Uses XMLHttpRequest
+		// Has issue with async loading, forcing it to sleep helps it work, will need to fix later
+		console.log("Running Trout HR 2");
+		jQuery.ajaxSetup();
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_03/master_scoreboard.xml');
+		xhr.onload = function() {
+			if (xhr.status === 200) {
+				console.log('User\'s name is ' + xhr.status);
+			}
+			else {
+				console.log('Request failed.  Returned status of ' + xhr.status);
+			}
+		};
+		var data;
+		var anyTrout = null;
+		xhr.onreadystatechange = function () {
+				sleep(50).then(() => {
+				if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+					console.log(xhr.status, xhr.DONE);
+				}
+				data = xhr.responseXML;
+
+				anyTrout = false;
+				var hrs_list = data.getElementsByTagName("home_runs");
+				for (var ihr = 0; ihr < hrs_list.length; ihr++) {
+					var hrs = hrs_list[ihr];
+					var player_list = hrs.getElementsByTagName("player");
+					for (var iplayer = 0; iplayer < player_list.length; iplayer++) {
+						var player = player_list[iplayer];
+						if (player.getAttribute('id') == '545361') {anyTrout = true;}
+					}
+				}
+				console.log("Trout hit HR 2 ? ", anyTrout);
+			})
+		};
+		xhr.send();
+		
+		return "hit Trout hr" + anyTrout;
+	}	
+	
+		
+	
+	function isTroutBatting() {
+		// Uses XMLHttpRequest
+		// Has issue with async loading, forcing it to sleep helps it work, will need to fix later
+		console.log("Running Trout HR 2");
+		jQuery.ajaxSetup();
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_05/master_scoreboard.xml');
+		xhr.onload = function() {
+			if (xhr.status === 200) {
+				console.log('User\'s name is ' + xhr.status);
+			}
+			else {
+				console.log('Request failed.  Returned status of ' + xhr.status);
+			}
+		};
+		var data;
+		var anyTrout = null;
+		xhr.onreadystatechange = function () {
+				console.log('state change' + xhr.DONE + xhr.status);
+				//sleep(250).then(() => {
+					if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+						console.log(xhr.status, xhr.DONE);
+						data = xhr.responseXML;
+
+						anyTrout = false;
+						var hrs_list = data.getElementsByTagName("batter");
+						for (var ihr = 0; ihr < hrs_list.length; ihr++) {
+							var hrs = hrs_list[ihr];
+							console.log('batting now is ' + hrs.getAttribute('last'));
+							//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
+							if (hrs.getAttribute('last') == 'Gardner') {anyTrout = true;}
+						}
+						console.log("Trout is batting: ", anyTrout);
+						if (anyTrout) {
+							chrome.notifications.create('reminder', {
+								type: 'basic',
+								iconUrl: 'icon_128.png',
+								title: 'Trout!',
+								message: 'Trout, dude!'
+								}, function(notificationId) {}
+							 );
+						}
+					}
+				//})
+		};
+		xhr.send();
+		
+		return "hit Trout hr" + anyTrout;
+	}	
+	
+	function keepChecking() {
+		while (true) {
+			sleep(5000).then(() => {
+				console.log("checking now");
+				isTroutBatting();
+			})
+		}
+		
+	}
+	
+	chrome.alarms.create("Trout", {
+       delayInMinutes: 0.1, periodInMinutes: 0.1});
+	chrome.alarms.onAlarm.addListener(isTroutBatting);
+	
   
-	document.getElementById('xmlhere').addEventListener('click', didTroutHitHR);
-	document.getElementById('xmlhere').onclick = didTroutHitHR;//function(aa){console.log(123)};
+	document.getElementById('xmlhere').addEventListener('click', function(aa) {console.log("Running Trout batting");console.log(isTroutBatting())});
+	document.getElementById('Trouts').onclick = keepChecking;  //didTroutHitHR2//didTroutHitHR2;//function(aa){console.log(123)};
 	document.getElementById('xmlhere').onclick = function(aa){console.log(123)};
 	//console.log("this works");
 	readxml();
 	didTroutHitHR();
+	didTroutHitHR2();
 	
 	
 	
