@@ -189,21 +189,44 @@
 		var checksBattingDetails = {};
 		var namesToCheck = namesStorage;
 		var anyTrout = false;
-		var batter_list = data.getElementsByTagName("batter");
-		for (var ibat = 0; ibat < batter_list.length; ibat++) {
-			var batter = batter_list[ibat];
-			console.log('batting now is ' + batter.getAttribute('last'));
-			//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
-			//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
-			var thisLast = batter.getAttribute('last');
-			if (jQuery.inArray(thisLast, namesToCheck) >= 0) {
-				anyTrout = true;
-				checksBatting.push(thisLast);
-				//console.log("HERE ");console.log(batter);
-				thisDetails = {};
-				thisDetails['h'] = batter.getAttribute('h');
-				thisDetails['ab'] = batter.getAttribute('ab');
-				checksBattingDetails[thisLast] = thisDetails;
+		var gameList = data.getElementsByTagName("game");
+		//var batter_list = data.getElementsByTagName("batter");
+		//for (var ibat = 0; ibat < batter_list.length; ibat++) {
+		for (var igame = 0; igame< gameList.length; igame++) {
+			var game = gameList[igame]
+			var batterList = game.getElementsByTagName("batter");
+			if (batterList.length > 0) { // there is one batter, single game so shouldn't be more
+				var batter = batterList[0];
+				console.log('batting now is ' + batter.getAttribute('last'));
+				//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
+				//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
+				var thisLast = batter.getAttribute('last');
+				if (jQuery.inArray(thisLast, namesToCheck) >= 0) {
+					anyTrout = true;
+					checksBatting.push(thisLast);
+					//console.log("HERE ");console.log(batter);
+					thisDetails = {};
+					thisDetails['last'] = batter.getAttribute('last');
+					thisDetails['first'] = batter.getAttribute('first');
+					thisDetails['h'] = batter.getAttribute('h');
+					thisDetails['ab'] = batter.getAttribute('ab');
+					thisDetails['home_name_abbrev'] = game.getAttribute('home_name_abbrev');
+					thisDetails['away_name_abbrev'] = game.getAttribute('away_name_abbrev');
+					var status = game.getElementsByTagName("status")[0];
+					thisDetails['inning'] = status.getAttribute('inning');
+					thisDetails['top_inning'] = status.getAttribute('top_inning');
+					thisDetails['status'] = status.getAttribute('status');
+					var runs = game.getElementsByTagName("r")[0];
+					thisDetails['runsHome'] = runs.getAttribute('home');
+					thisDetails['runsAway'] = runs.getAttribute('away');
+					var links = game.getElementsByTagName("links")[0];
+					var fullLink = links.getAttribute("mlbtv");
+					var partLink = fullLink.split("'")[1];
+					var mlbtvLink = "http://m.mlb.com/tv/e" + partLink;	
+					thisDetails['mlbtvLink'] = mlbtvLink;
+					http://m.mlb.com/tv/e
+					checksBattingDetails[thisLast] = thisDetails;
+				}
 			}
 		}
 		//console.log(checksBattingDetails);
@@ -228,28 +251,45 @@
 	
 	// 4: Make notification
 	function makeNotification(checksBatting, checksBattingDetails) {
-		items = [];
+		var items = [];
+		var buttonTitles = [];
+		var buttonLinks = [];
 		for (var i = 0; i < checksBatting.length; i++) {
-			items.push({title: checksBatting[i], message: checksBattingDetails[checksBatting[i]]['h'] + "/" + checksBattingDetails[checksBatting[i]]['ab']  });
+			var dets = checksBattingDetails[checksBatting[i]];
+			var inningTB = null; if (dets['top_inning'] == "Y") {inningTB = "T";} else {inningTB = "B";};
+			var itemTitle = dets['first'] + ' ' + dets['last']; //checksBatting[i];
+			var itemMessage = dets['h'] + "/" + dets['ab'] + " " + 
+				dets['away_name_abbrev'] + " " + dets['runsAway']+ " - " + dets['home_name_abbrev'] + 
+				" " + dets['runsHome'] + " " + inningTB + dets['inning']; // + dets['mlbtvLink'];
+			var item = {title: itemTitle, message: itemMessage };
+			items.push(item);
+			var buttonTitle = {title: itemTitle + " " + itemMessage};
+			buttonTitles.push(buttonTitle);
+			buttonLinks.push(dets['mlbtvLink']);
 		}
+		
 		var opt = {
 		  type: "list",
 		  title: "Batting",
 		  message: "Primary message to display",
 		  iconUrl: "icon_128.png",
-		  items: items
+		  items: items,
+		  //buttons: [{title: "Yes, get me there"}, {title: "Get out of my way"}]
+		  buttons: buttonTitles
 		}
-		if (true) {
-			createOrUpdate('batters', opt, function(notificationId) {}); 
-		} else {
-			createOrUpdate('batters', {
-				type: 'basic',
-				iconUrl: 'icon_128.png',
-				title: "Batting",
-				message: checksBatting + ' is batting!'
-				}, function(notificationId) {}
-			);
-		}
+		var myNotificationID = null;// not using, should remove this
+		createOrUpdate('batters', opt, function(id) {myNotificationID = id;}); 
+		chrome.notifications.onButtonClicked.addListener(function(notifId, btnIdx) {
+			//console.log(notifId, btnIdx, myNotificationID);
+			if (notifId === "batters") {
+				window.open(buttonLinks[btnIdx]);
+				/*if (btnIdx === 0) {
+					window.open(checksBattingDetails[checksBatting[0]]['mlbtvLink']);
+				} else if (btnIdx === 1) {
+					console.log(2);
+				}*/
+			}
+		});
 		
 	}
 	
@@ -282,7 +322,7 @@
 	}
 	
 	chrome.alarms.create("Trout", {
-	   delayInMinutes: 0.1, periodInMinutes: 0.1});
+	   delayInMinutes: 0.2, periodInMinutes: 0.2});
 	chrome.alarms.onAlarm.addListener(getNames);
 	
   
