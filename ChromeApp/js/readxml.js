@@ -12,6 +12,10 @@
     return false;
 	}
 	
+	function pad(n) {
+		return (n < 10) ? ("0" + n) : n;
+	}
+	
 	Array.prototype.compare = function(testArr) {
 		if (this.length != testArr.length) return false;
 		for (var i = 0; i < testArr.length; i++) {
@@ -159,7 +163,9 @@
 	// 2: get the XML
 	function getXML() {
 		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_05/master_scoreboard.xml');
+		var td = new Date();
+		var master_scoreboardURL = 'http://gd2.mlb.com/components/game/mlb/year_' + td.getFullYear() + '/month_' + pad(td.getMonth() + 1) + '/day_' + pad(td.getDate()) + '/master_scoreboard.xml';
+		xhr.open('GET', master_scoreboardURL);
 		xhr.onload = function() {
 			if (xhr.status === 200) {
 				//console.log('User\'s name is ' + xhr.status);
