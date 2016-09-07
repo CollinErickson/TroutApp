@@ -282,7 +282,7 @@
 		  type: "list",
 		  title: "Batting",
 		  message: "Primary message to display",
-		  iconUrl: "icon_128.png",
+		  iconUrl: "baseballbatter_128.png",//"icon_128.png",
 		  items: items,
 		  //buttons: [{title: "Yes, get me there"}, {title: "Get out of my way"}]
 		  buttons: buttonTitles

@@ -3,7 +3,7 @@
   "name": "Trout",
   "version": "1",
   "icons": {
-    "128": "icon_128.png"
+    "128": "baseballbatter_128.png"
   },
   "permissions": ["storage", "alarms", "notifications", "webview", "<all_urls>", { "fileSystem": ["write"] } ],
   "app": {
