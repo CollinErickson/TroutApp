@@ -256,10 +256,13 @@
 	}
 	
 	// 4: Make notification
+	var buttonLinks = []; // keep this outside function so when pressed it gives right link
+	var buttonPressed = []; // use this to prevent multiple tabs from opening, which happened a lot
 	function makeNotification(checksBatting, checksBattingDetails) {
 		var items = [];
 		var buttonTitles = [];
-		var buttonLinks = [];
+		buttonLinks = [];
+		buttonPressed = [];
 		for (var i = 0; i < checksBatting.length; i++) {
 			var dets = checksBattingDetails[checksBatting[i]];
 			var inningTB = null; if (dets['top_inning'] == "Y") {inningTB = "T";} else {inningTB = "B";};
@@ -272,6 +275,7 @@
 			var buttonTitle = {title: itemTitle + " " + itemMessage};
 			buttonTitles.push(buttonTitle);
 			buttonLinks.push(dets['mlbtvLink']);
+			buttonPressed.push(false);
 		}
 		
 		var opt = {
@@ -287,7 +291,9 @@
 		createOrUpdate('batters', opt, function(id) {myNotificationID = id;}); 
 		chrome.notifications.onButtonClicked.addListener(function(notifId, btnIdx) {
 			//console.log(notifId, btnIdx, myNotificationID);
-			if (notifId === "batters") {
+			if (notifId === "batters" && !buttonPressed[btnIdx]) {
+				console.log(buttonLinks[btnIdx], btnIdx);
+				buttonPressed[btnIdx] = true; // make sure it won't be opened multiple times
 				window.open(buttonLinks[btnIdx]);
 				/*if (btnIdx === 0) {
 					window.open(checksBattingDetails[checksBatting[0]]['mlbtvLink']);
