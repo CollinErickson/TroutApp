@@ -30,6 +30,19 @@
 	function sleep (time) {
 		return new Promise((resolve) => setTimeout(resolve, time));
 	}
+	
+	function isNameInNamesToCheck(last, first, namesToCheckLast, namesToCheckFirst) {
+		// loop over names
+		for (var i = 0; i < namesToCheckLast.length; i++) {
+			var thisLast = namesToCheckLast[i];
+			var thisFirst = namesToCheckFirst[i];
+			if (last == thisLast) { // make sure last is right
+				if (thisFirst== null) {return true;} // If no first given, return true
+				if (first.indexOf(thisFirst) == 0) {return true;} // If it matches first part of first given, return true
+			}
+		}
+		return false; // No matches, return false
+	}
  
 	
 	function didTroutHitHR2() {
@@ -193,7 +206,21 @@
 		console.log(namesStorage);
 		var checksBatting = [];
 		var checksBattingDetails = {};
-		var namesToCheck = namesStorage;
+		var namesStored = namesStorage;
+		var namesToCheckLast = [];
+		var namesToCheckFirst = [];
+		for (var i = 0; i < namesStored.length; i++) {
+			if (namesStored[i].indexOf("_") > -1) { // split first and last
+				var nameSplit = namesStored[i].split("_");
+				namesToCheckLast.push(nameSplit[1]);
+				namesToCheckFirst.push(nameSplit[0]);
+			} else { // Only last given
+				namesToCheckLast.push(namesStored[i]);
+				namesToCheckFirst.push(null);
+			}
+		}
+		console.log(namesToCheckLast);console.log(namesToCheckFirst);
+		var namesToCheck = namesStored;
 		var anyTrout = false;
 		var gameList = data.getElementsByTagName("game");
 		//var batter_list = data.getElementsByTagName("batter");
@@ -207,7 +234,14 @@
 				//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
 				//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
 				var thisLast = batter.getAttribute('last');
-				if (jQuery.inArray(thisLast, namesToCheck) >= 0) {
+				var thisFirst = batter.getAttribute('first');
+				//var posInArray = jQuery.inArray(thisLast, namesToCheckLast); // not a boolean, gives position
+				//console.log(posInArray, thisLast, thisFirst, namesToCheckFirst[posInArray]);
+				//console.log(posInArray > -1 && ((thisFirst == namesToCheckFirst[posInArray]) || (namesToCheckFirst[posInArray] == null)));
+				//console.log('a', posInArray > -1 , 'b', (thisFirst == namesToCheckFirst[posInArray]) , 'c', (thisFirst == null));
+				var nameInNamesToCheck = isNameInNamesToCheck(thisLast, thisFirst, namesToCheckLast, namesToCheckFirst);
+				//if (posInArray > -1 && ((thisFirst == namesToCheckFirst[posInArray]) || (namesToCheckFirst[posInArray] == null))) {
+				if (nameInNamesToCheck) {
 					anyTrout = true;
 					checksBatting.push(thisLast);
 					//console.log("HERE ");console.log(batter);
@@ -230,7 +264,6 @@
 					var partLink = fullLink.split("'")[1];
 					var mlbtvLink = "http://m.mlb.com/tv/e" + partLink;	
 					thisDetails['mlbtvLink'] = mlbtvLink;
-					http://m.mlb.com/tv/e
 					checksBattingDetails[thisLast] = thisDetails;
 				}
 			}
