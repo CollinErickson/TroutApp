@@ -45,120 +45,8 @@
 	}
  
 	
-	function didTroutHitHR2() {
-		// Uses XMLHttpRequest
-		// Has issue with async loading, forcing it to sleep helps it work, will need to fix later
-		console.log("Running Trout HR 2");
-		jQuery.ajaxSetup();
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_03/master_scoreboard.xml');
-		xhr.onload = function() {
-			if (xhr.status === 200) {
-				console.log('User\'s name is ' + xhr.status);
-			}
-			else {
-				console.log('Request failed.  Returned status of ' + xhr.status);
-			}
-		};
-		var data;
-		var anyTrout = null;
-		xhr.onreadystatechange = function () {
-				sleep(50).then(() => {
-				if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-					console.log(xhr.status, xhr.DONE);
-				}
-				data = xhr.responseXML;
-
-				anyTrout = false;
-				var hrs_list = data.getElementsByTagName("home_runs");
-				for (var ihr = 0; ihr < hrs_list.length; ihr++) {
-					var hrs = hrs_list[ihr];
-					var player_list = hrs.getElementsByTagName("player");
-					for (var iplayer = 0; iplayer < player_list.length; iplayer++) {
-						var player = player_list[iplayer];
-						if (player.getAttribute('id') == '545361') {anyTrout = true;}
-					}
-				}
-				console.log("Trout hit HR 2 ? ", anyTrout);
-			})
-		};
-		xhr.send();
-		
-		return "hit Trout hr" + anyTrout;
-	}	
-	
-		
-	
-	function isTroutBatting(alarmName) {
-		console.log("Alarm name is " + alarmName);
-		// Uses XMLHttpRequest
-		// Has issue with async loading, forcing it to sleep helps it work, will need to fix later
-		var namesToCheck = ["Trout", "Dozier", "Judge", "Plouffe", "Votto", "Mauer", "Sano", "Buxton", "Pujols"];
-		namesStorage = 'abcd';
-		chrome.storage.local.get('todos-vanillajs',function(a){namesStorage = a;});
-		console.log(namesStorage);
-		
-		console.log("isTroutBatting");
-		jQuery.ajaxSetup();
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'http://gd2.mlb.com/components/game/mlb/year_2016/month_09/day_05/master_scoreboard.xml');
-		xhr.onload = function() {
-			if (xhr.status === 200) {
-				console.log('User\'s name is ' + xhr.status);
-			}
-			else {
-				console.log('Request failed.  Returned status of ' + xhr.status);
-			}
-		};
-		var data;
-		//var anyTrout = null;
-		xhr.onreadystatechange = function () {
-				console.log('state change' + xhr.DONE + xhr.status);
-				//sleep(250).then(() => {
-					if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) { // this waits until it is done, so no sleep
-						console.log(xhr.status, xhr.DONE);
-						data = xhr.responseXML;
-
-						var checksBatting = [];
-						//for (var iLast = 0; iLast < namesToCheck.length; iLast++) {
-						//	lastToCheck = namesToCheck[iLast];
-						//	console.log("Checking for " + lastToCheck);
-							var anyTrout = false;
-							var hrs_list = data.getElementsByTagName("batter");
-							for (var ihr = 0; ihr < hrs_list.length; ihr++) {
-								var hrs = hrs_list[ihr];
-								console.log('batting now is ' + hrs.getAttribute('last'));
-								//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
-								//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
-								var thisLast = hrs.getAttribute('last');
-								if (jQuery.inArray(thisLast, namesToCheck) >= 0) {
-									anyTrout = true;
-									checksBatting.push(thisLast);
-								}
-							}
-							console.log("Trout is batting: ", anyTrout);
-							if (anyTrout) {
-								//chrome.notifications.create('batters', {
-								createOrUpdate('batters', {
-									type: 'basic',
-									iconUrl: 'icon_128.png',
-									title: "Batting",
-									message: checksBatting + ' is batting!'
-									}, function(notificationId) {}
-								 );
-							}
-						//}
-					}
-				//})
-		};
-		xhr.send();
-		
-		return "Leaving check for Trout";// + anyTrout;
-	}	
-	
 	// 1: get the names from the todo list
 	function getNames(alarmName) {
-		console.log("Alarm name is " + alarmName);
 		chrome.storage.local.get('todos-vanillajs', 
 			function(storage) {
 				stor = storage[dbName];
@@ -190,9 +78,9 @@
 		var data;
 		//var anyTrout = null;
 		xhr.onreadystatechange = function () {
-				console.log('state change' + xhr.DONE + xhr.status);
+				//console.log('state change' + xhr.DONE + xhr.status);
 				if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) { // this waits until it is done, so no sleep
-					console.log(xhr.status, xhr.DONE);
+					//console.log(xhr.status, xhr.DONE);
 					data = xhr.responseXML;
 					checkForNames(data);
 				}
@@ -219,28 +107,19 @@
 				namesToCheckFirst.push(null);
 			}
 		}
-		console.log(namesToCheckLast);console.log(namesToCheckFirst);
+		//console.log(namesToCheckLast);console.log(namesToCheckFirst);
 		var namesToCheck = namesStored;
 		var anyTrout = false;
 		var gameList = data.getElementsByTagName("game");
-		//var batter_list = data.getElementsByTagName("batter");
-		//for (var ibat = 0; ibat < batter_list.length; ibat++) {
 		for (var igame = 0; igame< gameList.length; igame++) {
 			var game = gameList[igame]
 			var batterList = game.getElementsByTagName("batter");
 			if (batterList.length > 0) { // there is one batter, single game so shouldn't be more
 				var batter = batterList[0];
-				console.log('batting now is ' + batter.getAttribute('last'));
-				//if (hrs.getAttribute('id') == '545361') {anyTrout = true;}
-				//if (hrs.getAttribute('last') == lastToCheck) {anyTrout = true;}
+				console.log('batting now is ' + batter.getAttribute('first') + ' ' + batter.getAttribute('last'));
 				var thisLast = batter.getAttribute('last');
 				var thisFirst = batter.getAttribute('first');
-				//var posInArray = jQuery.inArray(thisLast, namesToCheckLast); // not a boolean, gives position
-				//console.log(posInArray, thisLast, thisFirst, namesToCheckFirst[posInArray]);
-				//console.log(posInArray > -1 && ((thisFirst == namesToCheckFirst[posInArray]) || (namesToCheckFirst[posInArray] == null)));
-				//console.log('a', posInArray > -1 , 'b', (thisFirst == namesToCheckFirst[posInArray]) , 'c', (thisFirst == null));
 				var nameInNamesToCheck = isNameInNamesToCheck(thisLast, thisFirst, namesToCheckLast, namesToCheckFirst);
-				//if (posInArray > -1 && ((thisFirst == namesToCheckFirst[posInArray]) || (namesToCheckFirst[posInArray] == null))) {
 				if (nameInNamesToCheck) {
 					anyTrout = true;
 					checksBatting.push(thisLast);
@@ -268,8 +147,6 @@
 				}
 			}
 		}
-		//console.log(checksBattingDetails);
-		//console.log("Trout is batting: ", anyTrout);
 		if (anyTrout && !checksBatting.compare(previousNames)) {
 			console.log("new names are " + checksBatting);
 			//chrome.notifications.create('batters', {
@@ -340,11 +217,6 @@
 	
 	
 	
-	function beginChecking() {
-		chrome.alarms.create("Trout", {
-		   delayInMinutes: 0.1, periodInMinutes: 0.1});
-		chrome.alarms.onAlarm.addListener(isTroutBatting);
-	}
 	
 	function createOrUpdate(id, options, callback) {
 	  // Try to lower priority to minimal "shown" priority
@@ -371,36 +243,10 @@
 	chrome.alarms.onAlarm.addListener(getNames);
 	
   
-	document.getElementById('xmlhere').addEventListener('click', function(aa) {console.log("Running Trout batting");console.log(isTroutBatting())});
-	document.getElementById('Trouts').onclick = beginChecking;  //didTroutHitHR2//didTroutHitHR2;//function(aa){console.log(123)};
-	document.getElementById('xmlhere').onclick = function(aa){console.log(123)};
-	document.getElementById('names').onclick = getNames;
-	//console.log("this works");
-	//readxml();
-	//didTroutHitHR();
-	didTroutHitHR2();
+	document.getElementById('Trouts').onclick = function() {previousNames = []; getNames('From onclick');};
 	
 	
 	
-	
-	
-  function doExportToDisk2() {
-	  console.log("In export to disk 2");
-	  console.log(didTroutHitHR());
 
-		/*chrome.fileSystem.chooseEntry( {
-		  type: 'saveFile',
-		  suggestedName: 'todos.txt',
-		  accepts: [ { description: 'Text files (*.txt)',
-					   extensions: ['txt']} ],
-		  acceptsAllTypes: true
-		}, exportToFileEntry);*/
-
-	  
-  }
-  
-  
-  document.getElementById('Trouts').addEventListener('click', doExportToDisk2);
-  
   
 })();
