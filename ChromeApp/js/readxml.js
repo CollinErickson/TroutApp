@@ -27,6 +27,23 @@
 		return true;
 	}
 	
+	function anyNew(newarr, oldarr) {
+		if (newarr.length == 0) {return false;}
+		if (oldarr.length == 0) {return true;}
+		for (var i = 0; i < newarr.length; i++) {
+			var notInOld = true;
+			for (var j = 0; j < oldarr.length; j++) {
+				if (newarr[i] == oldarr[j]) {
+					notInOld = false;
+				}
+			}
+			if (notInOld) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	function sleep (time) {
 		return new Promise((resolve) => setTimeout(resolve, time));
 	}
@@ -90,8 +107,8 @@
 	
 	// 3: after having names and XML, check for names and notify as appropriate
 	function checkForNames(data) {
-		console.log("names to check are");
-		console.log(namesStorage);
+		//console.log("names to check are");
+		//console.log(namesStorage);
 		var checksBatting = [];
 		var checksBattingDetails = {};
 		var namesStored = namesStorage;
@@ -111,12 +128,14 @@
 		var namesToCheck = namesStored;
 		var anyTrout = false;
 		var gameList = data.getElementsByTagName("game");
+		var battersAllNames = []; // Just for logging to console
 		for (var igame = 0; igame< gameList.length; igame++) {
 			var game = gameList[igame]
 			var batterList = game.getElementsByTagName("batter");
 			if (batterList.length > 0) { // there is one batter, single game so shouldn't be more
 				var batter = batterList[0];
-				console.log('batting now is ' + batter.getAttribute('first') + ' ' + batter.getAttribute('last'));
+				//console.log('batting now is ' + batter.getAttribute('first') + ' ' + batter.getAttribute('last'));
+				battersAllNames.push(batter.getAttribute('first') + '_' + batter.getAttribute('last'));
 				var thisLast = batter.getAttribute('last');
 				var thisFirst = batter.getAttribute('first');
 				var nameInNamesToCheck = isNameInNamesToCheck(thisLast, thisFirst, namesToCheckLast, namesToCheckFirst);
@@ -147,8 +166,10 @@
 				}
 			}
 		}
-		if (anyTrout && !checksBatting.compare(previousNames)) {
-			console.log("new names are " + checksBatting);
+		console.log(battersAllNames);
+		//if (anyTrout && !checksBatting.compare(previousNames)) {
+		if (anyTrout && anyNew(checksBatting, previousNames)) { // This version won't notify again if 2 were batting then it drops to 1.
+			console.log("new names are ");// + checksBatting);
 			//chrome.notifications.create('batters', {
 			/*createOrUpdate('batters', {
 				type: 'basic',
