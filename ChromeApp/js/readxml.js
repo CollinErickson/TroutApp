@@ -57,6 +57,7 @@
 				if (thisFirst== null) {return true;} // If no first given, return true
 				if (first.indexOf(thisFirst) == 0) {return true;} // If it matches first part of first given, return true
 			}
+			if (thisLast == first + " " + last) {return true;}
 		}
 		return false; // No matches, return false
 	}
